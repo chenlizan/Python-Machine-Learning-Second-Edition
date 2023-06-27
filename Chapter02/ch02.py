@@ -116,7 +116,7 @@ class Perceptron(object):
 
     def predict(self, X):
         """Return class label after unit step"""
-        return np.where(self.net_input(X) >= 0.0, 1, -1)  # 阈值函数
+        return np.where(self.net_input(X) >= 0.0, 1, -1)  # 阈值(决策)函数
 
 
 v1 = np.array([1, 2, 3])
@@ -301,9 +301,9 @@ class AdalineGD(object):
             # a sigmoid function to implement a logistic regression classifier.
             output = self.activation(net_input)
             errors = (y - output)  # 分类标签y的期望 - 计算结果 = 偏差
-            self.w_[1:] += self.eta * X.T.dot(errors)  # 更新权重
-            self.w_[0] += self.eta * errors.sum()  # 更新偏置
-            cost = (errors ** 2).sum() / 2.0  # 偏差平方和 * 1/2
+            self.w_[1:] += self.eta * X.T.dot(errors)  # 更新权重，基于训练集中所有样本计算
+            self.w_[0] += self.eta * errors.sum()  # 更新偏置，基于权重为零时所有样本的偏差合
+            cost = (errors ** 2).sum() / 2.0  # 偏差平方和 * 1/2 代价(损失)函数
             self.cost_.append(cost)
         return self
 
@@ -317,7 +317,7 @@ class AdalineGD(object):
 
     def predict(self, X):
         """Return class label after unit step"""
-        return np.where(self.activation(self.net_input(X)) >= 0.0, 1, -1)  # 阈值函数
+        return np.where(self.activation(self.net_input(X)) >= 0.0, 1, -1)  # 阈值(决策)函数
 
 
 fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(10, 4))
