@@ -293,7 +293,7 @@ class LogisticRegressionGD(object):
 
             # note that we compute the logistic `cost` now
             # instead of the sum of squared errors cost
-            cost = -y.dot(np.log(output)) - ((1 - y).dot(np.log(1 - output)))
+            cost = -y.dot(np.log(output)) - ((1 - y).dot(np.log(1 - output)))  # 逻辑回归代价(损失)函数
             self.cost_.append(cost)
         return self
 
