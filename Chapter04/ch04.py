@@ -4,8 +4,8 @@
 import pandas as pd
 from io import StringIO
 import sys
-from sklearn.preprocessing import Imputer
 import numpy as np
+from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import train_test_split
@@ -19,6 +19,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_selection import SelectFromModel
+from sklearn.compose import ColumnTransformer
 
 # *Python Machine Learning 2nd Edition* by [Sebastian Raschka](https://sebastianraschka.com), Packt Publishing Ltd. 2017
 # 
@@ -31,9 +32,6 @@ from sklearn.feature_selection import SelectFromModel
 # # Chapter 4 - Building Good Training Sets – Data Preprocessing
 
 # Note that the optional watermark extension is a small IPython notebook plugin that I developed to make the code reproducible. You can just skip the following line(s).
-
-
-
 
 
 # *The use of `watermark` is optional. You can install this IPython extension via "`pip install watermark`". For more information, please see: https://github.com/rasbt/watermark.*
@@ -62,15 +60,9 @@ from sklearn.feature_selection import SelectFromModel
 # - [Summary](#Summary)
 
 
-
-
-
-
 # # Dealing with missing data
 
 # ## Identifying missing values in tabular data
-
-
 
 
 csv_data = '''A,B,C,D
@@ -87,101 +79,59 @@ if (sys.version_info < (3, 0)):
 df = pd.read_csv(StringIO(csv_data))
 df
 
-
-
-
 df.isnull().sum()
-
-
-
 
 # access the underlying NumPy array
 # via the `values` attribute
 df.values
 
-
-
 # ## Eliminating samples or features with missing values
-
 
 
 # remove rows that contain missing values
 
 df.dropna(axis=0)
 
-
-
-
 # remove columns that contain missing values
 
 df.dropna(axis=1)
 
-
-
-
 # remove columns that contain missing values
 
 df.dropna(axis=1)
-
-
-
 
 # only drop rows where all columns are NaN
 
-df.dropna(how='all')  
-
-
-
+df.dropna(how='all')
 
 # drop rows that have less than 3 real values 
 
 df.dropna(thresh=4)
 
-
-
-
 # only drop rows where NaN appear in specific columns (here: 'C')
 
 df.dropna(subset=['C'])
 
-
-
 # ## Imputing missing values
-
 
 
 # again: our original array
 df.values
 
-
-
-
 # impute missing values via the column mean
 
 
-imr = Imputer(missing_values='NaN', strategy='mean', axis=0)
+imr = SimpleImputer(missing_values=np.nan, strategy='mean')
 imr = imr.fit(df.values)
 imputed_data = imr.transform(df.values)
 imputed_data
 
-
-
 # ## Understanding the scikit-learn estimator API
-
-
-
-
-
-
-
-
 
 
 # # Handling categorical data
 
 # ## Nominal and ordinal features
-
-
 
 
 df = pd.DataFrame([['green', 'M', 10.1, 'class1'],
@@ -191,10 +141,7 @@ df = pd.DataFrame([['green', 'M', 10.1, 'class1'],
 df.columns = ['color', 'size', 'price', 'classlabel']
 df
 
-
-
 # ## Mapping ordinal features
-
 
 
 size_mapping = {'XL': 3,
@@ -204,58 +151,35 @@ size_mapping = {'XL': 3,
 df['size'] = df['size'].map(size_mapping)
 df
 
-
-
-
 inv_size_mapping = {v: k for k, v in size_mapping.items()}
 df['size'].map(inv_size_mapping)
-
-
 
 # ## Encoding class labels
 
 
-
-
 # create a mapping dict
 # to convert class labels from strings to integers
-class_mapping = {label: idx for idx, label in enumerate(np.unique(df['classlabel']))}
+class_mapping = {label: idx for idx, label in enumerate(np.unique(df['classlabel']))}  # enumerate 枚举函数
 class_mapping
-
-
-
 
 # to convert class labels from strings to integers
 df['classlabel'] = df['classlabel'].map(class_mapping)
 df
-
-
-
 
 # reverse the class label mapping
 inv_class_mapping = {v: k for k, v in class_mapping.items()}
 df['classlabel'] = df['classlabel'].map(inv_class_mapping)
 df
 
-
-
-
-
 # Label encoding with sklearn's LabelEncoder
 class_le = LabelEncoder()
 y = class_le.fit_transform(df['classlabel'].values)
 y
 
-
-
-
 # reverse mapping
 class_le.inverse_transform(y)
 
-
-
 # ## Performing one-hot encoding on nominal features
-
 
 
 X = df[['color', 'size', 'price']].values
@@ -264,48 +188,32 @@ color_le = LabelEncoder()
 X[:, 0] = color_le.fit_transform(X[:, 0])
 X
 
-
-
-
-
-ohe = OneHotEncoder(categorical_features=[0])
-ohe.fit_transform(X).toarray()
-
-
-
+# ohe = OneHotEncoder(categorical_features=[0])
+ohe = ColumnTransformer(transformers=[("color", OneHotEncoder(), [0])], remainder='passthrough')
+X = ohe.fit_transform(X)
 
 # return dense array so that we can skip
 # the toarray step
 
-ohe = OneHotEncoder(categorical_features=[0], sparse=False)
-ohe.fit_transform(X)
-
-
-
+# ohe = OneHotEncoder(categorical_features=[0], sparse=False)
+ohe = ColumnTransformer(transformers=[('color', OneHotEncoder(sparse=False), [0])], remainder='passthrough')
+X = ohe.fit_transform(X)
 
 # one-hot encoding via pandas
 
 pd.get_dummies(df[['price', 'color', 'size']])
 
-
-
-
 # multicollinearity guard in get_dummies
 
 pd.get_dummies(df[['price', 'color', 'size']], drop_first=True)
 
-
-
-
 # multicollinearity guard for the OneHotEncoder
 
-ohe = OneHotEncoder(categorical_features=[0])
-ohe.fit_transform(X).toarray()[:, 1:]
-
-
+# ohe = OneHotEncoder(categorical_features=[0])
+ohe = ColumnTransformer(transformers=[("color", OneHotEncoder(), [0])], remainder='passthrough')
+X = ohe.fit_transform(X)[:, 1:]
 
 # # Partitioning a dataset into a seperate training and test set
-
 
 
 df_wine = pd.read_csv('https://archive.ics.uci.edu/'
@@ -328,39 +236,25 @@ df_wine.columns = ['Class label', 'Alcohol', 'Malic acid', 'Ash',
 print('Class labels', np.unique(df_wine['Class label']))
 df_wine.head()
 
-
-
-
-
 X, y = df_wine.iloc[:, 1:].values, df_wine.iloc[:, 0].values
 
-X_train, X_test, y_train, y_test =    train_test_split(X, y, 
-                     test_size=0.3, 
-                     random_state=0, 
-                     stratify=y)
-
-
+X_train, X_test, y_train, y_test = train_test_split(X, y,
+                                                    test_size=0.3,
+                                                    random_state=0,
+                                                    stratify=y)
 
 # # Bringing features onto the same scale
-
-
 
 
 mms = MinMaxScaler()
 X_train_norm = mms.fit_transform(X_train)
 X_test_norm = mms.transform(X_test)
 
-
-
-
-
 stdsc = StandardScaler()
 X_train_std = stdsc.fit_transform(X_train)
 X_test_std = stdsc.transform(X_test)
 
-
 # A visual example:
-
 
 
 ex = np.array([0, 1, 2, 3, 4, 5])
@@ -374,8 +268,6 @@ print('standardized:', (ex - ex.mean()) / ex.std())
 # normalize
 print('normalized:', (ex - ex.min()) / (ex.max() - ex.min()))
 
-
-
 # # Selecting meaningful features
 
 # ...
@@ -385,29 +277,15 @@ print('normalized:', (ex - ex.min()) / (ex.max() - ex.min()))
 # ## A geometric interpretation of L2 regularization
 
 
-
-
-
-
-
-
-
 # ## Sparse solutions with L1-regularization
-
-
-
 
 
 # For regularized models in scikit-learn that support L1 regularization, we can simply set the `penalty` parameter to `'l1'` to obtain a sparse solution:
 
 
-
 LogisticRegression(penalty='l1')
 
-
 # Applied to the standardized Wine data ...
-
-
 
 
 lr = LogisticRegression(penalty='l1', C=1.0)
@@ -415,44 +293,28 @@ lr.fit(X_train_std, y_train)
 print('Training accuracy:', lr.score(X_train_std, y_train))
 print('Test accuracy:', lr.score(X_test_std, y_test))
 
-
-
-
 lr.intercept_
-
-
-
 
 np.set_printoptions(8)
 
-
-
-
-lr.coef_[lr.coef_!=0].shape
-
-
-
+lr.coef_[lr.coef_ != 0].shape
 
 lr.coef_
 
-
-
-
-
 fig = plt.figure()
 ax = plt.subplot(111)
-    
-colors = ['blue', 'green', 'red', 'cyan', 
-          'magenta', 'yellow', 'black', 
-          'pink', 'lightgreen', 'lightblue', 
+
+colors = ['blue', 'green', 'red', 'cyan',
+          'magenta', 'yellow', 'black',
+          'pink', 'lightgreen', 'lightblue',
           'gray', 'indigo', 'orange']
 
 weights, params = [], []
 for c in np.arange(-4., 6.):
-    lr = LogisticRegression(penalty='l1', C=10.**c, random_state=0)
+    lr = LogisticRegression(penalty='l1', C=10. ** c, random_state=0)
     lr.fit(X_train_std, y_train)
     weights.append(lr.coef_[1])
-    params.append(10**c)
+    params.append(10 ** c)
 
 weights = np.array(weights)
 
@@ -461,24 +323,20 @@ for column, color in zip(range(weights.shape[1]), colors):
              label=df_wine.columns[column + 1],
              color=color)
 plt.axhline(0, color='black', linestyle='--', linewidth=3)
-plt.xlim([10**(-5), 10**5])
+plt.xlim([10 ** (-5), 10 ** 5])
 plt.ylabel('weight coefficient')
 plt.xlabel('C')
 plt.xscale('log')
 plt.legend(loc='upper left')
-ax.legend(loc='upper center', 
+ax.legend(loc='upper center',
           bbox_to_anchor=(1.38, 1.03),
           ncol=1, fancybox=True)
-#plt.savefig('images/04_07.png', dpi=300, 
+# plt.savefig('images/04_07.png', dpi=300,
 #            bbox_inches='tight', pad_inches=0.2)
 plt.show()
 
 
-
 # ## Sequential feature selection algorithms
-
-
-
 
 
 class SBS():
@@ -491,14 +349,14 @@ class SBS():
         self.random_state = random_state
 
     def fit(self, X, y):
-        
-        X_train, X_test, y_train, y_test =             train_test_split(X, y, test_size=self.test_size,
-                             random_state=self.random_state)
+
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=self.test_size,
+                                                            random_state=self.random_state)
 
         dim = X_train.shape[1]
         self.indices_ = tuple(range(dim))
         self.subsets_ = [self.indices_]
-        score = self._calc_score(X_train, y_train, 
+        score = self._calc_score(X_train, y_train,
                                  X_test, y_test, self.indices_)
         self.scores_ = [score]
 
@@ -507,7 +365,7 @@ class SBS():
             subsets = []
 
             for p in combinations(self.indices_, r=dim - 1):
-                score = self._calc_score(X_train, y_train, 
+                score = self._calc_score(X_train, y_train,
                                          X_test, y_test, p)
                 scores.append(score)
                 subsets.append(p)
@@ -532,9 +390,6 @@ class SBS():
         return score
 
 
-
-
-
 knn = KNeighborsClassifier(n_neighbors=5)
 
 # selecting features
@@ -553,31 +408,18 @@ plt.tight_layout()
 # plt.savefig('images/04_08.png', dpi=300)
 plt.show()
 
-
-
-
 k3 = list(sbs.subsets_[10])
 print(df_wine.columns[1:][k3])
-
-
-
 
 knn.fit(X_train_std, y_train)
 print('Training accuracy:', knn.score(X_train_std, y_train))
 print('Test accuracy:', knn.score(X_test_std, y_test))
 
-
-
-
 knn.fit(X_train_std[:, k3], y_train)
 print('Training accuracy:', knn.score(X_train_std[:, k3], y_train))
 print('Test accuracy:', knn.score(X_test_std[:, k3], y_test))
 
-
-
 # # Assessing feature importance with Random Forests
-
-
 
 
 feat_labels = df_wine.columns[1:]
@@ -591,42 +433,34 @@ importances = forest.feature_importances_
 indices = np.argsort(importances)[::-1]
 
 for f in range(X_train.shape[1]):
-    print("%2d) %-*s %f" % (f + 1, 30, 
-                            feat_labels[indices[f]], 
+    print("%2d) %-*s %f" % (f + 1, 30,
+                            feat_labels[indices[f]],
                             importances[indices[f]]))
 
 plt.title('Feature Importance')
-plt.bar(range(X_train.shape[1]), 
+plt.bar(range(X_train.shape[1]),
         importances[indices],
         align='center')
 
-plt.xticks(range(X_train.shape[1]), 
+plt.xticks(range(X_train.shape[1]),
            feat_labels[indices], rotation=90)
 plt.xlim([-1, X_train.shape[1]])
 plt.tight_layout()
-#plt.savefig('images/04_09.png', dpi=300)
+# plt.savefig('images/04_09.png', dpi=300)
 plt.show()
-
-
-
-
 
 sfm = SelectFromModel(forest, threshold=0.1, prefit=True)
 X_selected = sfm.transform(X_train)
-print('Number of samples that meet this criterion:', 
+print('Number of samples that meet this criterion:',
       X_selected.shape[0])
-
 
 # Now, let's print the 3 features that met the threshold criterion for feature selection that we set earlier (note that this code snippet does not appear in the actual book but was added to this notebook later for illustrative purposes):
 
 
-
 for f in range(X_selected.shape[1]):
-    print("%2d) %-*s %f" % (f + 1, 30, 
-                            feat_labels[indices[f]], 
+    print("%2d) %-*s %f" % (f + 1, 30,
+                            feat_labels[indices[f]],
                             importances[indices[f]]))
-
-
 
 # # Summary
 
@@ -635,7 +469,3 @@ for f in range(X_selected.shape[1]):
 # ---
 # 
 # Readers may ignore the next cell.
-
-
-
-
