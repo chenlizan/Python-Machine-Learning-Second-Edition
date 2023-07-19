@@ -196,7 +196,7 @@ X = ohe.fit_transform(X)
 # the toarray step
 
 # ohe = OneHotEncoder(categorical_features=[0], sparse=False)
-ohe = ColumnTransformer(transformers=[('color', OneHotEncoder(sparse=False), [0])], remainder='passthrough')
+ohe = ColumnTransformer(transformers=[('color', OneHotEncoder(sparse_output=False), [0])], remainder='passthrough')
 X = ohe.fit_transform(X)
 
 # one-hot encoding via pandas
@@ -216,16 +216,13 @@ X = ohe.fit_transform(X)[:, 1:]
 # # Partitioning a dataset into a seperate training and test set
 
 
-df_wine = pd.read_csv('https://archive.ics.uci.edu/'
-                      'ml/machine-learning-databases/wine/wine.data',
-                      header=None)
+# df_wine = pd.read_csv('https://archive.ics.uci.edu/ml/machine-learning-databases/wine/wine.data',header=None)
 
 # if the Wine dataset is temporarily unavailable from the
 # UCI machine learning repository, un-comment the following line
 # of code to load the dataset from a local path:
 
-# df_wine = pd.read_csv('wine.data', header=None)
-
+df_wine = pd.read_csv('wine.data', header=None)
 
 df_wine.columns = ['Class label', 'Alcohol', 'Malic acid', 'Ash',
                    'Alcalinity of ash', 'Magnesium', 'Total phenols',
@@ -288,7 +285,7 @@ LogisticRegression(penalty='l1')
 # Applied to the standardized Wine data ...
 
 
-lr = LogisticRegression(penalty='l1', C=1.0)
+lr = LogisticRegression(penalty='l1', C=1.0, solver='liblinear')
 lr.fit(X_train_std, y_train)
 print('Training accuracy:', lr.score(X_train_std, y_train))
 print('Test accuracy:', lr.score(X_test_std, y_test))
@@ -311,7 +308,7 @@ colors = ['blue', 'green', 'red', 'cyan',
 
 weights, params = [], []
 for c in np.arange(-4., 6.):
-    lr = LogisticRegression(penalty='l1', C=10. ** c, random_state=0)
+    lr = LogisticRegression(penalty='l1', C=10. ** c, random_state=0, solver='liblinear')
     lr.fit(X_train_std, y_train)
     weights.append(lr.coef_[1])
     params.append(10 ** c)
