@@ -37,9 +37,6 @@ from sklearn.utils import resample
 # Note that the optional watermark extension is a small IPython notebook plugin that I developed to make the code reproducible. You can just skip the following line(s).
 
 
-
-
-
 # *The use of `watermark` is optional. You can install this IPython extension via "`pip install watermark`". For more information, please see: https://github.com/rasbt/watermark.*
 
 
@@ -66,10 +63,6 @@ from sklearn.utils import resample
 # - [Summary](#Summary)
 
 
-
-
-
-
 # # Streamlining workflows with pipelines
 
 # ...
@@ -77,29 +70,19 @@ from sklearn.utils import resample
 # ## Loading the Breast Cancer Wisconsin dataset
 
 
-
-
-df = pd.read_csv('https://archive.ics.uci.edu/ml/'
-                 'machine-learning-databases'
-                 '/breast-cancer-wisconsin/wdbc.data', header=None)
+# df = pd.read_csv('https://archive.ics.uci.edu/ml/'
+#                  'machine-learning-databases'
+#                  '/breast-cancer-wisconsin/wdbc.data', header=None)
 
 # if the Breast Cancer dataset is temporarily unavailable from the
 # UCI machine learning repository, un-comment the following line
 # of code to load the dataset from a local path:
 
-# df_wine = pd.read_csv('wdbc.data', header=None)
+df = pd.read_csv('wdbc.data', header=None)
 
 df.head()
 
-
-
-
 df.shape
-
-
-
-
-
 
 X = df.loc[:, 2:].values
 y = df.loc[:, 1].values
@@ -107,25 +90,14 @@ le = LabelEncoder()
 y = le.fit_transform(y)
 le.classes_
 
-
-
-
 le.transform(['M', 'B'])
 
-
-
-
-
-X_train, X_test, y_train, y_test =     train_test_split(X, y, 
-                     test_size=0.20,
-                     stratify=y,
-                     random_state=1)
-
-
+X_train, X_test, y_train, y_test = train_test_split(X, y,
+                                                    test_size=0.20,
+                                                    stratify=y,
+                                                    random_state=1)
 
 # ## Combining transformers and estimators in a pipeline
-
-
 
 
 pipe_lr = make_pipeline(StandardScaler(),
@@ -136,12 +108,6 @@ pipe_lr.fit(X_train, y_train)
 y_pred = pipe_lr.predict(X_test)
 print('Test Accuracy: %.3f' % pipe_lr.score(X_test, y_test))
 
-
-
-
-
-
-
 # # Using k-fold cross validation to assess model performance
 
 # ...
@@ -149,21 +115,10 @@ print('Test Accuracy: %.3f' % pipe_lr.score(X_test, y_test))
 # ## The holdout method
 
 
-
-
-
-
 # ## K-fold cross-validation
 
 
-
-
-
-
-
-    
-
-kfold = StratifiedKFold(n_splits=10,
+kfold = StratifiedKFold(n_splits=10, shuffle=True,
                         random_state=1).split(X_train, y_train)
 
 scores = []
@@ -171,14 +126,10 @@ for k, (train, test) in enumerate(kfold):
     pipe_lr.fit(X_train[train], y_train[train])
     score = pipe_lr.score(X_train[test], y_train[test])
     scores.append(score)
-    print('Fold: %2d, Class dist.: %s, Acc: %.3f' % (k+1,
-          np.bincount(y_train[train]), score))
-    
+    print('Fold: %2d, Class dist.: %s, Acc: %.3f' % (k + 1,
+                                                     np.bincount(y_train[train]), score))
+
 print('\nCV accuracy: %.3f +/- %.3f' % (np.mean(scores), np.std(scores)))
-
-
-
-
 
 scores = cross_val_score(estimator=pipe_lr,
                          X=X_train,
@@ -188,30 +139,21 @@ scores = cross_val_score(estimator=pipe_lr,
 print('CV accuracy scores: %s' % scores)
 print('CV accuracy: %.3f +/- %.3f' % (np.mean(scores), np.std(scores)))
 
-
-
 # # Debugging algorithms with learning curves
 
 
 # ## Diagnosing bias and variance problems with learning curves
 
 
-
-
-
-
-
-
-
 pipe_lr = make_pipeline(StandardScaler(),
-                        LogisticRegression(penalty='l2', random_state=1))
+                        LogisticRegression(penalty='l2', random_state=1, max_iter=200))
 
-train_sizes, train_scores, test_scores =                learning_curve(estimator=pipe_lr,
-                               X=X_train,
-                               y=y_train,
-                               train_sizes=np.linspace(0.1, 1.0, 10),
-                               cv=10,
-                               n_jobs=1)
+train_sizes, train_scores, test_scores = learning_curve(estimator=pipe_lr,
+                                                        X=X_train,
+                                                        y=y_train,
+                                                        train_sizes=np.linspace(0.1, 1.0, 10),
+                                                        cv=10,
+                                                        n_jobs=1)
 
 train_mean = np.mean(train_scores, axis=1)
 train_std = np.std(train_scores, axis=1)
@@ -243,47 +185,42 @@ plt.ylabel('Accuracy')
 plt.legend(loc='lower right')
 plt.ylim([0.8, 1.03])
 plt.tight_layout()
-#plt.savefig('images/06_05.png', dpi=300)
+# plt.savefig('images/06_05.png', dpi=300)
 plt.show()
-
-
 
 # ## Addressing over- and underfitting with validation curves
 
 
-
-
-
 param_range = [0.001, 0.01, 0.1, 1.0, 10.0, 100.0]
 train_scores, test_scores = validation_curve(
-                estimator=pipe_lr, 
-                X=X_train, 
-                y=y_train, 
-                param_name='logisticregression__C', 
-                param_range=param_range,
-                cv=10)
+    estimator=pipe_lr,
+    X=X_train,
+    y=y_train,
+    param_name='logisticregression__C',
+    param_range=param_range,
+    cv=10)
 
 train_mean = np.mean(train_scores, axis=1)
 train_std = np.std(train_scores, axis=1)
 test_mean = np.mean(test_scores, axis=1)
 test_std = np.std(test_scores, axis=1)
 
-plt.plot(param_range, train_mean, 
-         color='blue', marker='o', 
+plt.plot(param_range, train_mean,
+         color='blue', marker='o',
          markersize=5, label='training accuracy')
 
 plt.fill_between(param_range, train_mean + train_std,
                  train_mean - train_std, alpha=0.15,
                  color='blue')
 
-plt.plot(param_range, test_mean, 
-         color='green', linestyle='--', 
-         marker='s', markersize=5, 
+plt.plot(param_range, test_mean,
+         color='green', linestyle='--',
+         marker='s', markersize=5,
          label='validation accuracy')
 
-plt.fill_between(param_range, 
+plt.fill_between(param_range,
                  test_mean + test_std,
-                 test_mean - test_std, 
+                 test_mean - test_std,
                  alpha=0.15, color='green')
 
 plt.grid()
@@ -296,14 +233,10 @@ plt.tight_layout()
 # plt.savefig('images/06_06.png', dpi=300)
 plt.show()
 
-
-
 # # Fine-tuning machine learning models via grid search
 
 
 # ## Tuning hyperparameters via grid search 
-
-
 
 
 pipe_svc = make_pipeline(StandardScaler(),
@@ -311,36 +244,26 @@ pipe_svc = make_pipeline(StandardScaler(),
 
 param_range = [0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0]
 
-param_grid = [{'svc__C': param_range, 
+param_grid = [{'svc__C': param_range,
                'svc__kernel': ['linear']},
-              {'svc__C': param_range, 
-               'svc__gamma': param_range, 
+              {'svc__C': param_range,
+               'svc__gamma': param_range,
                'svc__kernel': ['rbf']}]
 
-gs = GridSearchCV(estimator=pipe_svc, 
-                  param_grid=param_grid, 
-                  scoring='accuracy', 
+gs = GridSearchCV(estimator=pipe_svc,
+                  param_grid=param_grid,
+                  scoring='accuracy',
                   cv=10,
                   n_jobs=-1)
 gs = gs.fit(X_train, y_train)
 print(gs.best_score_)
 print(gs.best_params_)
 
-
-
-
 clf = gs.best_estimator_
 clf.fit(X_train, y_train)
 print('Test accuracy: %.3f' % clf.score(X_test, y_test))
 
-
-
 # ## Algorithm selection with nested cross-validation
-
-
-
-
-
 
 
 gs = GridSearchCV(estimator=pipe_svc,
@@ -348,26 +271,20 @@ gs = GridSearchCV(estimator=pipe_svc,
                   scoring='accuracy',
                   cv=2)
 
-scores = cross_val_score(gs, X_train, y_train, 
+scores = cross_val_score(gs, X_train, y_train,
                          scoring='accuracy', cv=5)
 print('CV accuracy: %.3f +/- %.3f' % (np.mean(scores),
                                       np.std(scores)))
-
-
-
-
 
 gs = GridSearchCV(estimator=DecisionTreeClassifier(random_state=0),
                   param_grid=[{'max_depth': [1, 2, 3, 4, 5, 6, 7, None]}],
                   scoring='accuracy',
                   cv=2)
 
-scores = cross_val_score(gs, X_train, y_train, 
+scores = cross_val_score(gs, X_train, y_train,
                          scoring='accuracy', cv=5)
-print('CV accuracy: %.3f +/- %.3f' % (np.mean(scores), 
+print('CV accuracy: %.3f +/- %.3f' % (np.mean(scores),
                                       np.std(scores)))
-
-
 
 # # Looking at different performance evaluation metrics
 
@@ -376,19 +293,10 @@ print('CV accuracy: %.3f +/- %.3f' % (np.mean(scores),
 # ## Reading a confusion matrix
 
 
-
-
-
-
-
-
 pipe_svc.fit(X_train, y_train)
 y_pred = pipe_svc.predict(X_test)
 confmat = confusion_matrix(y_true=y_test, y_pred=y_pred)
 print(confmat)
-
-
-
 
 fig, ax = plt.subplots(figsize=(2.5, 2.5))
 ax.matshow(confmat, cmap=plt.cm.Blues, alpha=0.3)
@@ -400,40 +308,30 @@ plt.xlabel('Predicted label')
 plt.ylabel('True label')
 
 plt.tight_layout()
-#plt.savefig('images/06_09.png', dpi=300)
+# plt.savefig('images/06_09.png', dpi=300)
 plt.show()
-
 
 # ### Additional Note
 
 # Remember that we previously encoded the class labels so that *malignant* samples are the "postive" class (1), and *benign* samples are the "negative" class (0):
 
 
-
 le.transform(['M', 'B'])
-
-
-
 
 confmat = confusion_matrix(y_true=y_test, y_pred=y_pred)
 print(confmat)
-
 
 # Next, we printed the confusion matrix like so:
 
 
-
 confmat = confusion_matrix(y_true=y_test, y_pred=y_pred)
 print(confmat)
-
 
 # Note that the (true) class 0 samples that are correctly predicted as class 0 (true negatives) are now in the upper left corner of the matrix (index 0, 0). In order to change the ordering so that the true negatives are in the lower right corner (index 1,1) and the true positves are in the upper left, we can use the `labels` argument like shown below:
 
 
-
 confmat = confusion_matrix(y_true=y_test, y_pred=y_pred, labels=[1, 0])
 print(confmat)
-
 
 # We conclude:
 # 
@@ -443,15 +341,9 @@ print(confmat)
 # ## Optimizing the precision and recall of a classification model
 
 
-
-
 print('Precision: %.3f' % precision_score(y_true=y_test, y_pred=y_pred))
 print('Recall: %.3f' % recall_score(y_true=y_test, y_pred=y_pred))
 print('F1: %.3f' % f1_score(y_true=y_test, y_pred=y_pred))
-
-
-
-
 
 scorer = make_scorer(f1_score, pos_label=0)
 
@@ -472,23 +364,18 @@ gs = gs.fit(X_train, y_train)
 print(gs.best_score_)
 print(gs.best_params_)
 
-
-
 # ## Plotting a receiver operating characteristic
-
-
 
 
 pipe_lr = make_pipeline(StandardScaler(),
                         PCA(n_components=2),
-                        LogisticRegression(penalty='l2', 
-                                           random_state=1, 
+                        LogisticRegression(penalty='l2',
+                                           random_state=1,
                                            C=100.0))
 
 X_train2 = X_train[:, [4, 14]]
-    
 
-cv = list(StratifiedKFold(n_splits=3, 
+cv = list(StratifiedKFold(n_splits=3, shuffle=True,
                           random_state=1).split(X_train, y_train))
 
 fig = plt.figure(figsize=(7, 5))
@@ -504,13 +391,13 @@ for i, (train, test) in enumerate(cv):
     fpr, tpr, thresholds = roc_curve(y_train[test],
                                      probas[:, 1],
                                      pos_label=1)
-    mean_tpr += interp(mean_fpr, fpr, tpr)
+    mean_tpr += np.interp(mean_fpr, fpr, tpr)
     mean_tpr[0] = 0.0
     roc_auc = auc(fpr, tpr)
     plt.plot(fpr,
              tpr,
              label='ROC fold %d (area = %0.2f)'
-                   % (i+1, roc_auc))
+                   % (i + 1, roc_auc))
 
 plt.plot([0, 1],
          [0, 1],
@@ -539,34 +426,22 @@ plt.tight_layout()
 # plt.savefig('images/06_10.png', dpi=300)
 plt.show()
 
-
-
 # ## The scoring metrics for multiclass classification
 
 
-
-pre_scorer = make_scorer(score_func=precision_score, 
-                         pos_label=1, 
-                         greater_is_better=True, 
+pre_scorer = make_scorer(score_func=precision_score,
+                         pos_label=1,
+                         greater_is_better=True,
                          average='micro')
 
-
 # ## Dealing with class imbalance
-
 
 
 X_imb = np.vstack((X[y == 0], X[y == 1][:40]))
 y_imb = np.hstack((y[y == 0], y[y == 1][:40]))
 
-
-
-
 y_pred = np.zeros(y_imb.shape[0])
 np.mean(y_pred == y_imb) * 100
-
-
-
-
 
 print('Number of class 1 samples before:', X_imb[y_imb == 1].shape[0])
 
@@ -578,19 +453,11 @@ X_upsampled, y_upsampled = resample(X_imb[y_imb == 1],
 
 print('Number of class 1 samples after:', X_upsampled.shape[0])
 
-
-
-
 X_bal = np.vstack((X[y == 0], X_upsampled))
 y_bal = np.hstack((y[y == 0], y_upsampled))
 
-
-
-
 y_pred = np.zeros(y_bal.shape[0])
 np.mean(y_pred == y_bal) * 100
-
-
 
 # # Summary
 
@@ -599,7 +466,3 @@ np.mean(y_pred == y_bal) * 100
 # ---
 # 
 # Readers may ignore the next cell.
-
-
-
-
