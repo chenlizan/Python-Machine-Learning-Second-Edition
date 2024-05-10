@@ -9,6 +9,7 @@ import gzip
 import shutil
 import matplotlib.pyplot as plt
 
+
 # *Python Machine Learning 2nd Edition* by [Sebastian Raschka](https://sebastianraschka.com), Packt Publishing Ltd. 2017
 # 
 # Code Repository: https://github.com/rasbt/python-machine-learning-book-2nd-edition
@@ -21,9 +22,6 @@ import matplotlib.pyplot as plt
 # 
 
 # Note that the optional watermark extension is a small IPython notebook plugin that I developed to make the code reproducible. You can just skip the following line(s).
-
-
-
 
 
 # *The use of `watermark` is optional. You can install this IPython extension via "`pip install watermark`". For more information, please see: https://github.com/rasbt/watermark.*
@@ -45,10 +43,6 @@ import matplotlib.pyplot as plt
 # - [Summary](#Summary)
 
 
-
-
-
-
 # # Modeling complex functions with artificial neural networks
 
 # ...
@@ -56,26 +50,10 @@ import matplotlib.pyplot as plt
 # ## Single-layer neural network recap
 
 
-
-
-
-
 # ## Introducing the multi-layer neural network architecture
 
 
-
-
-
-
-
-
-
-
 # ## Activating a neural network via forward propagation
-
-
-
-
 
 
 # # Classifying handwritten digits
@@ -99,35 +77,27 @@ import matplotlib.pyplot as plt
 # 
 
 
-
- 
 def load_mnist(path, kind='train'):
     """Load MNIST data from `path`"""
-    labels_path = os.path.join(path, 
+    labels_path = os.path.join(path,
                                '%s-labels-idx1-ubyte' % kind)
-    images_path = os.path.join(path, 
+    images_path = os.path.join(path,
                                '%s-images-idx3-ubyte' % kind)
-        
+
     with open(labels_path, 'rb') as lbpath:
-        magic, n = struct.unpack('>II', 
+        magic, n = struct.unpack('>II',
                                  lbpath.read(8))
-        labels = np.fromfile(lbpath, 
+        labels = np.fromfile(lbpath,
                              dtype=np.uint8)
 
     with open(images_path, 'rb') as imgpath:
-        magic, num, rows, cols = struct.unpack(">IIII", 
+        magic, num, rows, cols = struct.unpack(">IIII",
                                                imgpath.read(16))
-        images = np.fromfile(imgpath, 
+        images = np.fromfile(imgpath,
                              dtype=np.uint8).reshape(len(labels), 784)
         images = ((images / 255.) - .5) * 2
- 
+
     return images, labels
-
-
-
-
-
-
 
 
 # unzips mnist
@@ -141,27 +111,18 @@ else:
 zipped_mnist = [f for f in os.listdir('./') if f.endswith('ubyte.gz')]
 for z in zipped_mnist:
     with gzip.GzipFile(z, mode='rb') as decompressed, open(z[:-3], writemode) as outfile:
-        outfile.write(decompressed.read()) 
-
-
-
+        outfile.write(decompressed.read())
 
 X_train, y_train = load_mnist('', kind='train')
 print('Rows: %d, columns: %d' % (X_train.shape[0], X_train.shape[1]))
 
-
-
-
 X_test, y_test = load_mnist('', kind='t10k')
 print('Rows: %d, columns: %d' % (X_test.shape[0], X_test.shape[1]))
-
 
 # Visualize the first digit of each class:
 
 
-
-
-fig, ax = plt.subplots(nrows=2, ncols=5, sharex=True, sharey=True,)
+fig, ax = plt.subplots(nrows=2, ncols=5, sharex=True, sharey=True, )
 ax = ax.flatten()
 for i in range(10):
     img = X_train[y_train == i][0].reshape(28, 28)
@@ -173,12 +134,10 @@ plt.tight_layout()
 # plt.savefig('images/12_5.png', dpi=300)
 plt.show()
 
-
 # Visualize 25 different versions of "7":
 
 
-
-fig, ax = plt.subplots(nrows=5, ncols=5, sharex=True, sharey=True,)
+fig, ax = plt.subplots(nrows=5, ncols=5, sharex=True, sharey=True, )
 ax = ax.flatten()
 for i in range(25):
     img = X_train[y_train == 7][i].reshape(28, 28)
@@ -190,38 +149,24 @@ plt.tight_layout()
 # plt.savefig('images/12_6.png', dpi=300)
 plt.show()
 
-
-
-
-
-np.savez_compressed('mnist_scaled.npz', 
+np.savez_compressed('mnist_scaled.npz',
                     X_train=X_train,
                     y_train=y_train,
                     X_test=X_test,
                     y_test=y_test)
 
-
-
-
 mnist = np.load('mnist_scaled.npz')
 mnist.files
 
-
-
-
-X_train, y_train, X_test, y_test = [mnist[f] for f in ['X_train', 'y_train', 
-                                    'X_test', 'y_test']]
+X_train, y_train, X_test, y_test = [mnist[f] for f in ['X_train', 'y_train',
+                                                       'X_test', 'y_test']]
 
 del mnist
 
 X_train.shape
 
 
-
 # ## Implementing a multi-layer perceptron
-
-
-
 
 
 class NeuralNetMLP(object):
@@ -252,6 +197,7 @@ class NeuralNetMLP(object):
       and validation accuracy for each epoch during training.
 
     """
+
     def __init__(self, n_hidden=30,
                  l2=0., epochs=100, eta=0.001,
                  shuffle=True, minibatch_size=1, seed=None):
@@ -265,6 +211,7 @@ class NeuralNetMLP(object):
         self.minibatch_size = minibatch_size
 
     def _onehot(self, y, n_classes):
+        """One-Hot representation又叫做One-Hot Encoding，是文本表示中比较常用的文本特征特征提取的方法。"""
         """Encode labels into one-hot representation
 
         Parameters
@@ -390,7 +337,7 @@ class NeuralNetMLP(object):
         epoch_strlen = len(str(self.epochs))  # for progress formatting
         self.eval_ = {'cost': [], 'train_acc': [], 'valid_acc': []}
 
-        y_train_enc = self._onehot(y_train, n_output)
+        y_train_enc = self._onehot(y_train, n_output)  # 独热编码
 
         # iterate over training epochs
         for i in range(self.epochs):
@@ -402,26 +349,26 @@ class NeuralNetMLP(object):
                 self.random.shuffle(indices)
 
             for start_idx in range(0, indices.shape[0] - self.minibatch_size +
-                                   1, self.minibatch_size):
+                                      1, self.minibatch_size):
                 batch_idx = indices[start_idx:start_idx + self.minibatch_size]
 
                 # forward propagation
-                z_h, a_h, z_out, a_out = self._forward(X_train[batch_idx])
+                z_h, a_h, z_out, a_out = self._forward(X_train[batch_idx])  # 前向传播输出
 
                 ##################
                 # Backpropagation
                 ##################
 
                 # [n_samples, n_classlabels]
-                sigma_out = a_out - y_train_enc[batch_idx]
+                sigma_out = a_out - y_train_enc[batch_idx]  # 输出层误差向量
 
                 # [n_samples, n_hidden]
-                sigmoid_derivative_h = a_h * (1. - a_h)
+                sigmoid_derivative_h = a_h * (1. - a_h)  # 隐藏层激活函数导数
 
                 # [n_samples, n_classlabels] dot [n_classlabels, n_hidden]
                 # -> [n_samples, n_hidden]
                 sigma_h = (np.dot(sigma_out, self.w_out.T) *
-                           sigmoid_derivative_h)
+                           sigmoid_derivative_h)  # 进藏层误差
 
                 # [n_features, n_samples] dot [n_samples, n_hidden]
                 # -> [n_features, n_hidden]
@@ -434,12 +381,12 @@ class NeuralNetMLP(object):
                 grad_b_out = np.sum(sigma_out, axis=0)
 
                 # Regularization and weight updates
-                delta_w_h = (grad_w_h + self.l2*self.w_h)
-                delta_b_h = grad_b_h # bias is not regularized
+                delta_w_h = (grad_w_h + self.l2 * self.w_h)
+                delta_b_h = grad_b_h  # bias is not regularized
                 self.w_h -= self.eta * delta_w_h
                 self.b_h -= self.eta * delta_b_h
 
-                delta_w_out = (grad_w_out + self.l2*self.w_out)
+                delta_w_out = (grad_w_out + self.l2 * self.w_out)
                 delta_b_out = grad_b_out  # bias is not regularized
                 self.w_out -= self.eta * delta_w_out
                 self.b_out -= self.eta * delta_b_out
@@ -450,22 +397,22 @@ class NeuralNetMLP(object):
 
             # Evaluation after each epoch during training
             z_h, a_h, z_out, a_out = self._forward(X_train)
-            
+
             cost = self._compute_cost(y_enc=y_train_enc,
                                       output=a_out)
 
             y_train_pred = self.predict(X_train)
             y_valid_pred = self.predict(X_valid)
 
-            train_acc = ((np.sum(y_train == y_train_pred)).astype(np.float) /
+            train_acc = ((np.sum(y_train == y_train_pred)).astype(np.float_) /
                          X_train.shape[0])
-            valid_acc = ((np.sum(y_valid == y_valid_pred)).astype(np.float) /
+            valid_acc = ((np.sum(y_valid == y_valid_pred)).astype(np.float_) /
                          X_valid.shape[0])
 
             sys.stderr.write('\r%0*d/%d | Cost: %.2f '
                              '| Train/Valid Acc.: %.2f%%/%.2f%% ' %
-                             (epoch_strlen, i+1, self.epochs, cost,
-                              train_acc*100, valid_acc*100))
+                             (epoch_strlen, i + 1, self.epochs, cost,
+                              train_acc * 100, valid_acc * 100))
             sys.stderr.flush()
 
             self.eval_['cost'].append(cost)
@@ -473,8 +420,6 @@ class NeuralNetMLP(object):
             self.eval_['valid_acc'].append(valid_acc)
 
         return self
-
-
 
 
 n_epochs = 200
@@ -489,22 +434,18 @@ n_epochs = 200
 if 'TRAVIS' in os.environ:
     n_epochs = 20
 
-
-
-
-nn = NeuralNetMLP(n_hidden=100, 
-                  l2=0.01, 
-                  epochs=n_epochs, 
+nn = NeuralNetMLP(n_hidden=100,
+                  l2=0.01,
+                  epochs=n_epochs,
                   eta=0.0005,
-                  minibatch_size=100, 
+                  minibatch_size=100,
                   shuffle=True,
                   seed=1)
 
-nn.fit(X_train=X_train[:55000], 
+nn.fit(X_train=X_train[:55000],
        y_train=y_train[:55000],
        X_valid=X_train[55000:],
        y_valid=y_train[55000:])
-
 
 # ---
 # **Note**
@@ -544,22 +485,16 @@ nn.fit(X_train=X_train[:55000],
 # 
 
 
-
-
 a = np.arange(5)
 b = a
 print('a & b', np.may_share_memory(a, b))
 
-
 a = np.arange(5)
 print('a & b', np.may_share_memory(a, b))
-
 
 # (End of note.)
 # 
 # ---
-
-
 
 
 plt.plot(range(nn.epochs), nn.eval_['cost'])
@@ -568,12 +503,9 @@ plt.xlabel('Epochs')
 #plt.savefig('images/12_07.png', dpi=300)
 plt.show()
 
-
-
-
-plt.plot(range(nn.epochs), nn.eval_['train_acc'], 
+plt.plot(range(nn.epochs), nn.eval_['train_acc'],
          label='training')
-plt.plot(range(nn.epochs), nn.eval_['valid_acc'], 
+plt.plot(range(nn.epochs), nn.eval_['valid_acc'],
          label='validation', linestyle='--')
 plt.ylabel('Accuracy')
 plt.xlabel('Epochs')
@@ -581,28 +513,22 @@ plt.legend()
 #plt.savefig('images/12_08.png', dpi=300)
 plt.show()
 
-
-
-
 y_test_pred = nn.predict(X_test)
 acc = (np.sum(y_test == y_test_pred)
-       .astype(np.float) / X_test.shape[0])
+       .astype(np.float_) / X_test.shape[0])
 
 print('Test accuracy: %.2f%%' % (acc * 100))
-
-
-
 
 miscl_img = X_test[y_test != y_test_pred][:25]
 correct_lab = y_test[y_test != y_test_pred][:25]
 miscl_lab = y_test_pred[y_test != y_test_pred][:25]
 
-fig, ax = plt.subplots(nrows=5, ncols=5, sharex=True, sharey=True,)
+fig, ax = plt.subplots(nrows=5, ncols=5, sharex=True, sharey=True, )
 ax = ax.flatten()
 for i in range(25):
     img = miscl_img[i].reshape(28, 28)
     ax[i].imshow(img, cmap='Greys', interpolation='nearest')
-    ax[i].set_title('%d) t: %d p: %d' % (i+1, correct_lab[i], miscl_lab[i]))
+    ax[i].set_title('%d) t: %d p: %d' % (i + 1, correct_lab[i], miscl_lab[i]))
 
 ax[0].set_xticks([])
 ax[0].set_yticks([])
@@ -610,17 +536,11 @@ plt.tight_layout()
 #plt.savefig('images/12_09.png', dpi=300)
 plt.show()
 
-
-
 # # Training an artificial neural network
 
 # ...
 
 # ## Computing the logistic cost function
-
-
-
-
 
 
 # ## Developing your intuition for backpropagation
@@ -630,19 +550,7 @@ plt.show()
 # ## Training neural networks via backpropagation
 
 
-
-
-
-
-
-
-
-
 # # Convergence in neural networks
-
-
-
-
 
 
 # ...
@@ -654,7 +562,3 @@ plt.show()
 # ---
 # 
 # Readers may ignore the next cell.
-
-
-
-
