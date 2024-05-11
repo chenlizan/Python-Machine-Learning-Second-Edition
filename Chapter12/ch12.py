@@ -368,17 +368,17 @@ class NeuralNetMLP(object):
                 # [n_samples, n_classlabels] dot [n_classlabels, n_hidden]
                 # -> [n_samples, n_hidden]
                 sigma_h = (np.dot(sigma_out, self.w_out.T) *
-                           sigmoid_derivative_h)  # 进藏层误差
+                           sigmoid_derivative_h)  # 隐藏层误差
 
                 # [n_features, n_samples] dot [n_samples, n_hidden]
                 # -> [n_features, n_hidden]
-                grad_w_h = np.dot(X_train[batch_idx].T, sigma_h)
-                grad_b_h = np.sum(sigma_h, axis=0)
+                grad_w_h = np.dot(X_train[batch_idx].T, sigma_h)  # 隐藏层权重
+                grad_b_h = np.sum(sigma_h, axis=0)  # 隐藏层偏置
 
                 # [n_hidden, n_samples] dot [n_samples, n_classlabels]
                 # -> [n_hidden, n_classlabels]
-                grad_w_out = np.dot(a_h.T, sigma_out)
-                grad_b_out = np.sum(sigma_out, axis=0)
+                grad_w_out = np.dot(a_h.T, sigma_out)  # 输出层权重
+                grad_b_out = np.sum(sigma_out, axis=0)  # 输出层偏置
 
                 # Regularization and weight updates
                 delta_w_h = (grad_w_h + self.l2 * self.w_h)
@@ -500,7 +500,7 @@ print('a & b', np.may_share_memory(a, b))
 plt.plot(range(nn.epochs), nn.eval_['cost'])
 plt.ylabel('Cost')
 plt.xlabel('Epochs')
-#plt.savefig('images/12_07.png', dpi=300)
+# plt.savefig('images/12_07.png', dpi=300)
 plt.show()
 
 plt.plot(range(nn.epochs), nn.eval_['train_acc'],
@@ -510,7 +510,7 @@ plt.plot(range(nn.epochs), nn.eval_['valid_acc'],
 plt.ylabel('Accuracy')
 plt.xlabel('Epochs')
 plt.legend()
-#plt.savefig('images/12_08.png', dpi=300)
+# plt.savefig('images/12_08.png', dpi=300)
 plt.show()
 
 y_test_pred = nn.predict(X_test)
@@ -533,7 +533,7 @@ for i in range(25):
 ax[0].set_xticks([])
 ax[0].set_yticks([])
 plt.tight_layout()
-#plt.savefig('images/12_09.png', dpi=300)
+# plt.savefig('images/12_09.png', dpi=300)
 plt.show()
 
 # # Training an artificial neural network
