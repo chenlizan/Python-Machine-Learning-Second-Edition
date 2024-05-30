@@ -37,9 +37,6 @@ from sklearn.decomposition import LatentDirichletAllocation
 # Note that the optional watermark extension is a small IPython notebook plugin that I developed to make the code reproducible. You can just skip the following line(s).
 
 
-
-
-
 # *The use of `watermark` is optional. You can install this IPython extension via "`pip install watermark`". For more information, please see: https://github.com/rasbt/watermark.*
 
 
@@ -77,9 +74,6 @@ from sklearn.decomposition import LatentDirichletAllocation
 # **Optional code to download and unzip the dataset via Python:**
 
 
-
-
-
 source = 'http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz'
 target = 'aclImdb_v1.tar.gz'
 
@@ -91,35 +85,30 @@ def reporthook(count, block_size, total_size):
         return
     duration = time.time() - start_time
     progress_size = int(count * block_size)
-    speed = progress_size / (1024.**2 * duration)
+    speed = progress_size / (1024. ** 2 * duration)
     percent = count * block_size * 100. / total_size
     sys.stdout.write("\r%d%% | %d MB | %.2f MB/s | %d sec elapsed" %
-                    (percent, progress_size / (1024.**2), speed, duration))
+                     (percent, progress_size / (1024. ** 2), speed, duration))
     sys.stdout.flush()
 
 
 if not os.path.isdir('aclImdb') and not os.path.isfile('aclImdb_v1.tar.gz'):
-    
+
     if (sys.version_info < (3, 0)):
         import urllib
+
         urllib.urlretrieve(source, target, reporthook)
-    
+
     else:
         import urllib.request
+
         urllib.request.urlretrieve(source, target, reporthook)
 
-
-
-
 if not os.path.isdir('aclImdb'):
-
     with tarfile.open(target, 'r:gz') as tar:
         tar.extractall()
 
-
 # ## Preprocessing the movie dataset into more convenient format
-
-
 
 
 # change the `basepath` to the directory of the
@@ -134,37 +123,27 @@ for s in ('test', 'train'):
     for l in ('pos', 'neg'):
         path = os.path.join(basepath, s, l)
         for file in os.listdir(path):
-            with open(os.path.join(path, file), 
+            with open(os.path.join(path, file),
                       'r', encoding='utf-8') as infile:
                 txt = infile.read()
-            df = df.append([[txt, labels[l]]], 
-                           ignore_index=True)
+            df = df._append([[txt, labels[l]]],
+                            ignore_index=True)
             pbar.update()
 df.columns = ['review', 'sentiment']
 
-
 # Shuffling the DataFrame:
-
-
 
 
 np.random.seed(0)
 df = df.reindex(np.random.permutation(df.index))
 
-
 # Optional: Saving the assembled data as CSV file:
-
 
 
 df.to_csv('movie_data.csv', index=False, encoding='utf-8')
 
-
-
-
-
 df = pd.read_csv('movie_data.csv', encoding='utf-8')
 df.head(3)
-
 
 # ### Note
 # 
@@ -185,39 +164,29 @@ df.head(3)
 # 
 
 
-
-
 count = CountVectorizer()
 docs = np.array([
-        'The sun is shining',
-        'The weather is sweet',
-        'The sun is shining, the weather is sweet, and one and one is two'])
+    'The sun is shining',
+    'The weather is sweet',
+    'The sun is shining, the weather is sweet, and one and one is two'])
 bag = count.fit_transform(docs)
-
 
 # Now let us print the contents of the vocabulary to get a better understanding of the underlying concepts:
 
 
-
 print(count.vocabulary_)
-
 
 # As we can see from executing the preceding command, the vocabulary is stored in a Python dictionary, which maps the unique words that are mapped to integer indices. Next let us print the feature vectors that we just created:
 
 # Each index position in the feature vectors shown here corresponds to the integer values that are stored as dictionary items in the CountVectorizer vocabulary. For example, the  rst feature at index position 0 resembles the count of the word and, which only occurs in the last document, and the word is at index position 1 (the 2nd feature in the document vectors) occurs in all three sentences. Those values in the feature vectors are also called the raw term frequencies: *tf (t,d)*—the number of times a term t occurs in a document *d*.
 
 
-
 print(bag.toarray())
-
-
 
 # ## Assessing word relevancy via term frequency-inverse document frequency
 
 
-
 np.set_printoptions(precision=2)
-
 
 # When we are analyzing text data, we often encounter words that occur across multiple documents from both classes. Those frequently occurring words typically don't contain useful or discriminatory information. In this subsection, we will learn about a useful technique called term frequency-inverse document frequency (tf-idf) that can be used to downweight those frequently occurring words in the feature vectors. The tf-idf can be de ned as the product of the term frequency and the inverse document frequency:
 # 
@@ -233,14 +202,11 @@ np.set_printoptions(precision=2)
 # Scikit-learn implements yet another transformer, the `TfidfTransformer`, that takes the raw term frequencies from `CountVectorizer` as input and transforms them into tf-idfs:
 
 
-
-
-tfidf = TfidfTransformer(use_idf=True, 
-                         norm='l2', 
+tfidf = TfidfTransformer(use_idf=True,
+                         norm='l2',
                          smooth_idf=True)
 print(tfidf.fit_transform(count.fit_transform(docs))
       .toarray())
-
 
 # As we saw in the previous subsection, the word is had the largest term frequency in the 3rd document, being the most frequently occurring word. However, after transforming the same feature vector into tf-idfs, we see that the word is is
 # now associated with a relatively small tf-idf (0.45) in document 3 since it is
@@ -273,13 +239,11 @@ print(tfidf.fit_transform(count.fit_transform(docs))
 # $$\text{tf-idf}("is",d3)= 3 \times (0+1) = 3$$
 
 
-
 tf_is = 3
 n_docs = 3
-idf_is = np.log((n_docs+1) / (3+1))
+idf_is = np.log((n_docs + 1) / (3 + 1))
 tfidf_is = tf_is * (idf_is + 1)
 print('tf-idf of term "is" = %.2f' % tfidf_is)
-
 
 # If we repeated these calculations for all terms in the 3rd document, we'd obtain the following tf-idf vectors: [3.39, 3.0, 3.39, 1.29, 1.29, 1.29, 2.0 , 1.69, 1.29]. However, we notice that the values in this feature vector are different from the values that we obtained from the TfidfTransformer that we used previously. The  nal step that we are missing in this tf-idf calculation is the L2-normalization, which can be applied as follows:
 
@@ -292,26 +256,17 @@ print('tf-idf of term "is" = %.2f' % tfidf_is)
 # As we can see, the results match the results returned by scikit-learn's `TfidfTransformer` (below). Since we now understand how tf-idfs are calculated, let us proceed to the next sections and apply those concepts to the movie review dataset.
 
 
-
 tfidf = TfidfTransformer(use_idf=True, norm=None, smooth_idf=True)
 raw_tfidf = tfidf.fit_transform(count.fit_transform(docs)).toarray()[-1]
-raw_tfidf 
+raw_tfidf
 
-
-
-
-l2_tfidf = raw_tfidf / np.sqrt(np.sum(raw_tfidf**2))
+l2_tfidf = raw_tfidf / np.sqrt(np.sum(raw_tfidf ** 2))
 l2_tfidf
-
-
 
 # ## Cleaning text data
 
 
-
 df.loc[0, 'review'][-50:]
-
-
 
 
 def preprocessor(text):
@@ -323,28 +278,17 @@ def preprocessor(text):
     return text
 
 
-
-
 preprocessor(df.loc[0, 'review'][-50:])
-
-
-
 
 preprocessor("</a>This :) is :( a test :-)!")
 
-
-
-
 df['review'] = df['review'].apply(preprocessor)
-
-
 
 # ## Processing documents into tokens
 
 
-
-
 porter = PorterStemmer()
+
 
 def tokenizer(text):
     return text.split()
@@ -354,45 +298,25 @@ def tokenizer_porter(text):
     return [porter.stem(word) for word in text.split()]
 
 
-
-
 tokenizer('runners like running and thus they run')
-
-
-
 
 tokenizer_porter('runners like running and thus they run')
 
-
-
-
-
 nltk.download('stopwords')
-
-
-
-
 
 stop = stopwords.words('english')
 [w for w in tokenizer_porter('a runner likes running and runs a lot')[-10:]
-if w not in stop]
-
-
+ if w not in stop]
 
 # # Training a logistic regression model for document classification
 
 # Strip HTML and punctuation to speed up the GridSearch later:
 
 
-
 X_train = df.loc[:25000, 'review'].values
 y_train = df.loc[:25000, 'sentiment'].values
 X_test = df.loc[25000:, 'review'].values
 y_test = df.loc[25000:, 'sentiment'].values
-
-
-
-
 
 tfidf = TfidfVectorizer(strip_accents=None,
                         lowercase=False,
@@ -406,21 +330,20 @@ param_grid = [{'vect__ngram_range': [(1, 1)],
               {'vect__ngram_range': [(1, 1)],
                'vect__stop_words': [stop, None],
                'vect__tokenizer': [tokenizer, tokenizer_porter],
-               'vect__use_idf':[False],
-               'vect__norm':[None],
+               'vect__use_idf': [False],
+               'vect__norm': [None],
                'clf__penalty': ['l1', 'l2'],
                'clf__C': [1.0, 10.0, 100.0]},
               ]
 
 lr_tfidf = Pipeline([('vect', tfidf),
-                     ('clf', LogisticRegression(random_state=0))])
+                     ('clf', LogisticRegression(max_iter=10000, random_state=0))])
 
 gs_lr_tfidf = GridSearchCV(lr_tfidf, param_grid,
                            scoring='accuracy',
                            cv=5,
                            verbose=1,
                            n_jobs=-1)
-
 
 # **Important Note about `n_jobs`**
 # 
@@ -445,7 +368,6 @@ gs_lr_tfidf = GridSearchCV(lr_tfidf, param_grid,
 #                   ]
 
 
-
 ## @Readers: PLEASE IGNORE THIS CELL
 ##
 ## This cell is meant to generate more 
@@ -456,37 +378,23 @@ gs_lr_tfidf = GridSearchCV(lr_tfidf, param_grid,
 ## dataset for debugging
 
 if 'TRAVIS' in os.environ:
-    gs_lr_tfidf.verbose=2
+    gs_lr_tfidf.verbose = 2
     X_train = df.loc[:250, 'review'].values
     y_train = df.loc[:250, 'sentiment'].values
     X_test = df.loc[25000:25250, 'review'].values
     y_test = df.loc[25000:25250, 'sentiment'].values
 
-
-
-
 gs_lr_tfidf.fit(X_train, y_train)
-
-
-
 
 print('Best parameter set: %s ' % gs_lr_tfidf.best_params_)
 print('CV Accuracy: %.3f' % gs_lr_tfidf.best_score_)
 
-
-
-
 clf = gs_lr_tfidf.best_estimator_
 print('Test Accuracy: %.3f' % clf.score(X_test, y_test))
-
-
 
 # ####  Start comment:
 #     
 # Please note that `gs_lr_tfidf.best_score_` is the average k-fold cross-validation score. I.e., if we have a `GridSearchCV` object with 5-fold cross-validation (like the one above), the `best_score_` attribute returns the average score over the 5-folds of the best model. To illustrate this with an example:
-
-
-
 
 
 np.random.seed(0)
@@ -494,32 +402,25 @@ np.set_printoptions(precision=6)
 y = [np.random.randint(3) for i in range(25)]
 X = (y + np.random.randn(25)).reshape(-1, 1)
 
-cv5_idx = list(StratifiedKFold(n_splits=5, shuffle=False, random_state=0).split(X, y))
-    
+cv5_idx = list(StratifiedKFold(n_splits=5, shuffle=True, random_state=0).split(X, y))
+
 cross_val_score(LogisticRegression(random_state=123), X, y, cv=cv5_idx)
 
-
-# By executing the code above, we created a simple data set of random integers that shall represent our class labels. Next, we fed the indices of 5 cross-validation folds (`cv3_idx`) to the `cross_val_score` scorer, which returned 5 accuracy scores -- these are the 5 accuracy values for the 5 test folds.  
+# By executing the code above, we created a simple data set of random integers that shall represent our class labels. Next, we fed the indices of 5 cross-validation folds (`cv3_idx`) to the `cross_val_score` scorer, which returned 5 accuracy scores -- these are the 5 accuracy values for the 5 test folds.
 # 
 # Next, let us use the `GridSearchCV` object and feed it the same 5 cross-validation sets (via the pre-generated `cv3_idx` indices):
 
 
-
-
-gs = GridSearchCV(LogisticRegression(), {}, cv=cv5_idx, verbose=3).fit(X, y) 
-
+gs = GridSearchCV(LogisticRegression(), {}, cv=cv5_idx, verbose=3).fit(X, y)
 
 # As we can see, the scores for the 5 folds are exactly the same as the ones from `cross_val_score` earlier.
 
 # Now, the best_score_ attribute of the `GridSearchCV` object, which becomes available after `fit`ting, returns the average accuracy score of the best model:
 
 
-
 gs.best_score_
 
-
 # As we can see, the result above is consistent with the average score computed the `cross_val_score`.
-
 
 
 cross_val_score(LogisticRegression(), X, y, cv=cv5_idx).mean()
@@ -532,12 +433,10 @@ cross_val_score(LogisticRegression(), X, y, cv=cv5_idx).mean()
 # # Working with bigger data - online algorithms and out-of-core learning
 
 
-
-
 def tokenizer(text):
     text = re.sub('<[^>]*>', '', text)
     emoticons = re.findall('(?::|;|=)(?:-)?(?:\)|\(|D|P)', text.lower())
-    text = re.sub('[\W]+', ' ', text.lower()) +        ' '.join(emoticons).replace('-', '')
+    text = re.sub('[\W]+', ' ', text.lower()) + ' '.join(emoticons).replace('-', '')
     tokenized = [w for w in text.split() if w not in stop]
     return tokenized
 
@@ -550,11 +449,7 @@ def stream_docs(path):
             yield text, label
 
 
-
-
 next(stream_docs(path='movie_data.csv'))
-
-
 
 
 def get_minibatch(doc_stream, size):
@@ -569,23 +464,18 @@ def get_minibatch(doc_stream, size):
     return docs, y
 
 
-
-
-
-vect = HashingVectorizer(decode_error='ignore', 
-                         n_features=2**21,
-                         preprocessor=None, 
+vect = HashingVectorizer(decode_error='ignore',
+                         n_features=2 ** 21,
+                         preprocessor=None,
                          tokenizer=tokenizer)
 
-clf = SGDClassifier(loss='log', random_state=1, n_iter=1)
+clf = SGDClassifier(loss='log_loss', random_state=1, n_iter_no_change=1)
 doc_stream = stream_docs(path='movie_data.csv')
-
 
 # **Note**
 # 
 # - You can replace `Perceptron(n_iter, ...)` by `Perceptron(max_iter, ...)` in scikit-learn >= 0.19. The `n_iter` parameter is used here deriberately, because some people still use scikit-learn 0.18.
 # 
-
 
 
 pbar = pyprind.ProgBar(45)
@@ -599,18 +489,11 @@ for _ in range(45):
     clf.partial_fit(X_train, y_train, classes=classes)
     pbar.update()
 
-
-
-
 X_test, y_test = get_minibatch(doc_stream, size=5000)
 X_test = vect.transform(X_test)
 print('Accuracy: %.3f' % clf.score(X_test, y_test))
 
-
-
-
 clf = clf.partial_fit(X_test, y_test)
-
 
 # ## Topic modeling
 
@@ -619,13 +502,8 @@ clf = clf.partial_fit(X_test, y_test)
 # ### Latent Dirichlet Allocation with scikit-learn
 
 
-
-
 df = pd.read_csv('movie_data.csv', encoding='utf-8')
 df.head(3)
-
-
-
 
 ## @Readers: PLEASE IGNORE THIS CELL
 ##
@@ -640,41 +518,26 @@ if 'TRAVIS' in os.environ:
     df = pd.read_csv('movie_data.csv', nrows=500)
     print('SMALL DATA SUBSET CREATED FOR TESTING')
 
-
-
-
-
 count = CountVectorizer(stop_words='english',
                         max_df=.1,
                         max_features=5000)
 X = count.fit_transform(df['review'].values)
 
-
-
-
-
-lda = LatentDirichletAllocation(n_topics=10,
+lda = LatentDirichletAllocation(n_components=10,
                                 random_state=123,
                                 learning_method='batch')
 X_topics = lda.fit_transform(X)
 
-
-
-
 lda.components_.shape
 
-
-
-
 n_top_words = 5
-feature_names = count.get_feature_names()
+feature_names = count.get_feature_names_out()
 
 for topic_idx, topic in enumerate(lda.components_):
     print("Topic %d:" % (topic_idx + 1))
     print(" ".join([feature_names[i]
-                    for i in topic.argsort()\
+                    for i in topic.argsort() \
                         [:-n_top_words - 1:-1]]))
-
 
 # Based on reading the 5 most important words for each topic, we may guess that the LDA identified the following topics:
 #     
@@ -692,13 +555,11 @@ for topic_idx, topic in enumerate(lda.components_):
 # To confirm that the categories make sense based on the reviews, let's plot 5 movies from the horror movie category (category 6 at index position 5):
 
 
-
 horror = X_topics[:, 5].argsort()[::-1]
 
 for iter_idx, movie_idx in enumerate(horror[:3]):
     print('\nHorror movie #%d:' % (iter_idx + 1))
     print(df['review'][movie_idx][:300], '...')
-
 
 # Using the preceeding code example, we printed the first 300 characters from the top 3 horror movies and indeed, we can see that the reviews -- even though we don't know which exact movie they belong to -- sound like reviews of horror movies, indeed. (However, one might argue that movie #2 could also belong to topic category 1.)
 
@@ -710,7 +571,3 @@ for iter_idx, movie_idx in enumerate(horror[:3]):
 # ---
 # 
 # Readers may ignore the next cell.
-
-
-
-
